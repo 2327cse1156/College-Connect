@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 const Signup = () => {
@@ -20,8 +21,22 @@ const Signup = () => {
     
     try {
       setLoading(true);
+      // Sign up with Supabase Auth
       await signup(formData.email, formData.password);
-      // Here you can add additional user data to Firestore if needed
+      
+      // Create profile in the profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            email: formData.email,
+            full_name: formData.name,
+            role: formData.role,
+          }
+        ]);
+
+      if (profileError) throw profileError;
+
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error) {
